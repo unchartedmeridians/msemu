@@ -407,7 +407,10 @@ void exe_instr(uint16_t opcode) {
                     uint16_t hl = reg_pair_read("hl");
                     uint16_t de = reg_pair_read("de");
                     uint16_t bc = reg_pair_read("bc");
-
+                    if (bc == 0)
+                    {
+                        bc = 0xFFFF
+                    }
                     uint8_t data = mem_read(hl);
                     mem_write(de, data);
                     hl++;
@@ -429,6 +432,10 @@ void exe_instr(uint16_t opcode) {
                     //TODO: interrupts?
                     uint16_t addr = reg_pair_read("hl");
                     uint8_t data = mem_read(addr);
+                    if (cpu.reg_b == 0)
+                    {
+                        cpu.reg_b = 0xFF
+                    }
                     cpu.reg_b--;
                     io_port_write(cpu.reg_c, data);
                     addr++;
