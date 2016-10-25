@@ -355,7 +355,7 @@ void exe_instr(uint16_t opcode) {
 
             case 0xB7: // OR s where s = A
                 cpu.reg_a |= cpu.reg_a;
-                if ((int8_t)cpu.reg_a <0) {
+                if ((int8_t)cpu.reg_a < 0) {
                     cpu_flag_set('s');
                 } else
                 {
@@ -409,7 +409,7 @@ void exe_instr(uint16_t opcode) {
                     uint16_t bc = reg_pair_read("bc");
                     if (bc == 0)
                     {
-                        bc = 0xFFFF
+                        bc = 0xFFFF;
                     }
                     uint8_t data = mem_read(hl);
                     mem_write(de, data);
@@ -434,7 +434,7 @@ void exe_instr(uint16_t opcode) {
                     uint8_t data = mem_read(addr);
                     if (cpu.reg_b == 0)
                     {
-                        cpu.reg_b = 0xFF
+                        cpu.reg_b = 0xFF;
                     }
                     cpu.reg_b--;
                     io_port_write(cpu.reg_c, data);
@@ -462,7 +462,7 @@ void exe_instr(uint16_t opcode) {
 }
 
 void cpu_run(void) {
-    cpu.reg_pc = 0;
+    cpu.reg_pc = 0x38;
     uint16_t opcode;
 
     while (1) {
@@ -471,7 +471,7 @@ void cpu_run(void) {
             opcode <<= 8;
             opcode |= fetch_next();
         }
-        printf("%hX: %hX (B:%hhX, A:%hhX)\n", (uint16_t)(cpu.reg_pc-1), opcode, cpu.reg_b, cpu.reg_a);
+        printf("%hX: %hX (B:%hhX, A:%hhX, Z:%d)\n", (uint16_t)(cpu.reg_pc-1), opcode, cpu.reg_b, cpu.reg_a, cpu_flag_test('z'));
         exe_instr(opcode);
    }
 }
