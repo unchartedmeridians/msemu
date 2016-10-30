@@ -29,7 +29,10 @@ int main (int argc, char *argv[])
         }
     }
     mem_set_bios(bios);
-    cpu_run();
+    cpu_init(0x00);
+    while (1) {
+        cpu_run_instruction();
+    }
     return 0;
 }
 

@@ -2,7 +2,7 @@
 #include <stdbool.h>
 
 uint8_t vram[0x4000] = { 0 };
-uint8_t cram[0x32] = { 0 };
+uint8_t cram[0x20] = { 0 };
 
 struct Vdp {
     uint8_t reg_mode_control1;                  // 0x00
@@ -40,4 +40,6 @@ void data_write(uint8_t data) {
 uint8_t data_read(void) {
     //TODO
 }
+
+void vdp_run(void) {
 

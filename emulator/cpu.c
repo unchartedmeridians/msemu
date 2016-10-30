@@ -49,6 +49,10 @@ bool check_parity(uint8_t byte) {
     return (~byte) & 1;
 }
 
+void cpu_jump(uint16_t addr) {
+    cpu.reg_pc = addr;
+}
+
 void cpu_call(uint16_t addr) {
     uint8_t pc_msb = (uint8_t)cpu.reg_pc >> 8;
     uint8_t pc_lsb = (uint8_t)cpu.reg_pc & 0xFF;
@@ -57,6 +61,15 @@ void cpu_call(uint16_t addr) {
     cpu.reg_sp--;
     mem_write(cpu.reg_sp, pc_lsb);
     cpu.reg_pc = addr;
+}
+
+void cpu_push(uint16_t data) {
+    uint8_t data_msb = (uint8_t)data >> 8;
+    uint8_t data_lsb = (uint8_t)data & 0xFF;
+    cpu.reg_sp--;
+    mem_write(cpu.reg_sp, data_msb);
+    cpu.reg_sp--;
+    mem_write(cpu.reg_sp, data_lsb);
 }
 
 void cpu_flag_set(char flag) {
@@ -200,6 +213,18 @@ void exe_instr(uint16_t opcode) {
             case 0x06: // LD r, n where r = B
                 cpu.reg_b = fetch_next();
                 break;
+            case 0x07: // RLCA
+                {
+                    uint8_t reg_a = cpu.reg_a;
+                    bool carry = (bool)(reg_a & 0b10000000);
+                    reg_a = reg_a << 1;
+                    if (carry) {
+                        cpu_flag_set('c');
+                        reg_a = reg_a | 0b00000001;
+                    }
+                    cpu.reg_a = reg_a;
+                    break;
+                }
             case 0x0D: // DEC m where m = C
                 cpu.reg_c--;
                 if ((int16_t)cpu.reg_c < 0) {
@@ -371,7 +396,9 @@ void exe_instr(uint16_t opcode) {
                 cpu_flag_clear('n');
                 cpu_flag_clear('c');
                 break;
-
+            case 0xc3: // JP nn
+                cpu.reg_pc = fetch_next16();
+                break;
             case 0xC9: // RET
                 {
                     uint16_t addr_lsb = mem_read(cpu.reg_sp);
@@ -387,10 +414,25 @@ void exe_instr(uint16_t opcode) {
                     cpu_call(fetch_next16());
                     break;
                 }
+            case 0xD2:  // JP cc, nn where CC = carry
+                {
+                    uint16_t jump_to = fetch_next16();
+                    if (cpu_flag_test('c'))
+                    {
+                        cpu_jump(jump_to);
+                    }
+                    break;
+                }
             case 0xD3: // OUT (n), A
                 {
                     uint8_t port = fetch_next();
                     io_port_write(port, cpu.reg_a);
+                    break;
+                }
+            case 0xDB: // IN A, (n)
+                {
+                    uint8_t port = fetch_next();
+                    cpu.reg_a = io_port_read(port);
                     break;
                 }
             case 0xE7: // RST p where p = 0x0020
@@ -451,6 +493,9 @@ void exe_instr(uint16_t opcode) {
                 cpu.iff1 = false;
                 cpu.iff2 = false;
                 break;
+            case 0xF5: // PUSH qq where qq = AF
+                cpu_push(reg_pair_read("af"));
+                break;
             case 0xFB: // EI
                 cpu.iff1 = true;
                 cpu.iff2 = true;
@@ -461,19 +506,21 @@ void exe_instr(uint16_t opcode) {
         }
 }
 
-void cpu_run(void) {
+void cpu_init(uint16_t entry_point) {
+    cpu.reg_pc = entry_point;
+}
+
+void cpu_run_instruction(void) {
     cpu.reg_pc = 0x38;
     uint16_t opcode;
-
-    while (1) {
-        opcode = fetch_next();
-        if (opcode == 0xED) {
-            opcode <<= 8;
-            opcode |= fetch_next();
-        }
-        printf("%hX: %hX (B:%hhX, A:%hhX, Z:%d)\n", (uint16_t)(cpu.reg_pc-1), opcode, cpu.reg_b, cpu.reg_a, cpu_flag_test('z'));
-        exe_instr(opcode);
-   }
+    opcode = fetch_next();
+    if (opcode == 0xED) {
+        opcode <<= 8;
+        opcode |= fetch_next();
+    }
+    printf("%hX: %hX (B:%hhX, A:%hhX, Z:%d)\n", (uint16_t)(cpu.reg_pc-1), opcode, cpu.reg_b, cpu.reg_a, cpu_flag_test('z'));
+    exe_instr(opcode);
+}
 }
 
 
