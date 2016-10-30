@@ -31,10 +31,8 @@ int main (int argc, char *argv[])
     mem_set_bios(bios);
     cpu_init(0x00);
     while (1) {
-        cpu_run_instruction();
+        cpu_run(228);
+        printf("MONKY CHEESE\n");
     }
     return 0;
 }
-
-
-

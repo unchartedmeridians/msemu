@@ -42,4 +42,5 @@ uint8_t data_read(void) {
 }
 
 void vdp_run(void) {
-
+    //TODO
+}

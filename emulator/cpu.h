@@ -4,6 +4,6 @@
 #include <stdint.h>
 
 void cpu_init(uint16_t);
-void cpu_run(void);
+void cpu_run(int);
 
 #endif
