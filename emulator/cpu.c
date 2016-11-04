@@ -549,8 +549,8 @@ void cpu_run(int num_cycles) {
             opcode <<= 8;
             opcode |= fetch_next();
         }
-        
         printf("%hX: %hX (B:%hhX, A:%hhX, Z:%d)\n", (uint16_t)(cpu.reg_pc-1), opcode, cpu.reg_b, cpu.reg_a, cpu_flag_test('z'));
+        getchar();
         num_cycles -= exe_instr(opcode);
     }
     return;
