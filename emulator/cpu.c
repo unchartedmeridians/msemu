@@ -42,6 +42,10 @@ struct Cpu {
 int err;
 struct Cpu cpu;
 
+bool cpu_interrupts_enabled(void) {
+    return (cpu.iff1 && cpu.iff2);
+}
+
 bool check_parity(uint8_t byte) {
     byte ^= byte >> 4;
     byte ^= byte >> 2;
@@ -53,16 +57,6 @@ void cpu_jump(uint16_t addr) {
     cpu.reg_pc = addr;
 }
 
-void cpu_call(uint16_t addr) {
-    uint8_t pc_msb = (uint8_t)cpu.reg_pc >> 8;
-    uint8_t pc_lsb = (uint8_t)cpu.reg_pc & 0xFF;
-    cpu.reg_sp--;
-    mem_write(cpu.reg_sp, pc_msb);
-    cpu.reg_sp--;
-    mem_write(cpu.reg_sp, pc_lsb);
-    cpu.reg_pc = addr;
-}
-
 void cpu_push(uint16_t data) {
     uint8_t data_msb = (uint8_t)data >> 8;
     uint8_t data_lsb = (uint8_t)data & 0xFF;
@@ -70,6 +64,11 @@ void cpu_push(uint16_t data) {
     mem_write(cpu.reg_sp, data_msb);
     cpu.reg_sp--;
     mem_write(cpu.reg_sp, data_lsb);
+}
+
+void cpu_call(uint16_t addr) {
+    cpu_push(cpu.reg_pc);
+    cpu.reg_pc = addr;
 }
 
 void cpu_flag_set(char flag) {
@@ -541,6 +540,15 @@ void cpu_init(uint16_t entry_point) {
     cpu.reg_pc = entry_point;
 }
 
+void cpu_irq(void) {
+    if (cpu.iff1) {
+        cpu.iff1 = false;
+        cpu.iff2 = false;
+        cpu_call(0x38);
+    }
+
+}
+
 void cpu_run(int num_cycles) {
     uint16_t opcode;
     while (num_cycles > 0) {
@@ -550,7 +558,6 @@ void cpu_run(int num_cycles) {
             opcode |= fetch_next();
         }
         printf("%hX: %hX (B:%hhX, A:%hhX, Z:%d)\n", (uint16_t)(cpu.reg_pc-1), opcode, cpu.reg_b, cpu.reg_a, cpu_flag_test('z'));
-        getchar();
         num_cycles -= exe_instr(opcode);
     }
     return;

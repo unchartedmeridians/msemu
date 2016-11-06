@@ -1,5 +1,5 @@
-#ifndef IO_C
-#define IO_C
+#ifndef IO_H
+#define IO_H
 
 #include <stdint.h>
 

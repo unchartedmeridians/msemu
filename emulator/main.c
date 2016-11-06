@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "mem.h"
 #include "cpu.h"
+#include "vdp.h"
 
 int main (int argc, char *argv[])
 {
@@ -30,9 +31,10 @@ int main (int argc, char *argv[])
     }
     mem_set_bios(bios);
     cpu_init(0x00);
+    vdp_init();
     while (1) {
         cpu_run(228);
-        printf("MONKY CHEESE\n");
+        vdp_run();
     }
     return 0;
 }
